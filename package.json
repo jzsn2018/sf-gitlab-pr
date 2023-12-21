@@ -18,22 +18,38 @@
         "title": "Hello World"
       }
     ],
-    "views": {
-			"sf-pr-newpr": [
-				{
-					"id": "sf.pr.newpr",
-					"name": "新建 PR"
-				}
-			]
-		},
     "viewsContainers": {
-			"activitybar": [
-				{
-					"id": "sf-pr-newpr",
-					"title": "内网PR提交",
-					"icon": "src/assets/gitlab.svg"
+      "activitybar": [
+        {
+          "id": "sf-gitlab-pr",
+          "title": "内网PR提交",
+          "icon": "src/assets/gitlab.svg"
+        }
+      ]
+    },
+    "views": {
+      "sf-gitlab-pr": [
+        {
+          "type": "webview",
+          "id": "sf-gitlab-pr",
+          "name": "PR 配置"
+        }
+      ]
+    },
+    "configuration": {
+			"title": "GitlabMrt",
+			"properties": {
+				"gitlabmrt.instanceUrl": {
+					"type": "string",
+					"default": "https://gitlab.com",
+					"description": "Your GitLab instance URL"
+				},
+				"gitlabmrt.token": {
+					"type": "string",
+					"default": "",
+					"description": "Access token to use to connect to the Gitlab API"
 				}
-			]
+			}
 		}
   },
   "scripts": {
