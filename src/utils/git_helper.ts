@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
-import { API, GitExtension, Repository, GitInfo } from '../../type';
-import { log } from '../index';
+import { API, GitExtension, Repository, GitInfo } from '../type';
+import { log } from './index';
 
 class GitExtensionWrap implements vscode.Disposable {
     apiListeners: vscode.Disposable[] = [];
@@ -46,7 +46,6 @@ class GitExtensionWrap implements vscode.Disposable {
             cb(paths);
 
             this.repoPath = repoPath;
-            console.log(this.gitApi.repositories);
             // this.enablementListener = this.gitExtension.onDidChangeEnablement(
             //   this.onDidChangeGitExtensionEnablement,
             //   this,
@@ -73,7 +72,6 @@ class GitExtensionWrap implements vscode.Disposable {
             const head = this.repo.state.HEAD;
             const url = this.repo.state.remotes[0]?.fetchUrl?.replace(/\.git(\/)?$/, '');
             const match = url?.match(/\/([^\/.]+)$/);
-
             const branches = await this.repo?.getBranches({ remote: true });
             res({
                 branches,

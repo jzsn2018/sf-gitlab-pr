@@ -42,17 +42,17 @@
       ]
     },
     "configuration": {
-      "title": "GitlabMrt",
+      "title": "深信服内网PR提交插件",
       "properties": {
-        "gitlabmrt.instanceUrl": {
+        "深信服内网PR提交插件.host": {
           "type": "string",
           "default": "https://gitlab.com",
-          "description": "Your GitLab instance URL"
+          "description": "gitlab的网站域名地址，例如：https://gitlab.com"
         },
-        "gitlabmrt.token": {
+        "深信服内网PR提交插件.AccessToken": {
           "type": "string",
           "default": "",
-          "description": "Access token to use to connect to the Gitlab API"
+          "description": "请在gitlab个人设置中获取 AccessToken"
         }
       }
     }
@@ -78,6 +78,10 @@
     "typescript": "^5.2.2"
   },
   "dependencies": {
-    "axios": "^1.6.2"
-  }
+    "axios": "^1.6.2",
+    "lodash-es": "^4.17.21"
+  },
+  "extensionDependencies": [
+    "vscode.git"
+  ]
 }

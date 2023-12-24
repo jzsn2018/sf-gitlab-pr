@@ -3,12 +3,13 @@
  */
 
 import { handleResError } from '../utils';
-import { MRParams, GitlabProject, GitlabBranch, GitlabUsers, CreateMrResponse, ExtensionConfig } from './type';
+import { MRParams, GitlabProject, GitlabBranch, GitlabUsers, CreateMrResponse, ExtensionConfig } from '../type';
 import axios, { AxiosInstance } from 'axios';
 
 class Api {
     id?: number;
     axios: AxiosInstance;
+    project?: GitlabProject;
 
     constructor(configuration: ExtensionConfig) {
         this.axios = axios.create({
@@ -19,12 +20,12 @@ class Api {
             timeout: 5000,
         });
         this.axios.interceptors.request.use(function (config) {
-            console.log({
-                request: {
-                    url: config.url,
-                    params: config.params
-                }
-            });
+            // console.log({
+            //     request: {
+            //         url: config.url,
+            //         params: config.params
+            //     }
+            // });
             return config;
         });
         this.axios.interceptors.response.use(function (res) {
@@ -44,12 +45,12 @@ class Api {
         }).then(res => {
             if (res.data.length) {
                 const result = res.data.find(item => item['http_url_to_repo'] === url);
-                this.id = (result || res.data[0] || {}).id;
+                this.project = result || res.data[0] || {};
+                this.id = this.project.id;
             }
         });
     }
 
-    // 通过接口获取分支，有时会到不到全部数据，已改为通过 gitExtension 获取，此方法弃用
     getBranches() {
         return this.axios.get<GitlabBranch[]>(`/projects/${this.id}/repository/branches`);
     }
@@ -59,8 +60,17 @@ class Api {
             params: {
                 active: true,
                 project_id: this.id,
-                per_page: 100,
+                per_page: 20,
                 search: name,
+            }
+        });
+    }
+
+    uploadImage(file: any) {
+        // https://docs.gitlab.com/ee/api/projects.html#upload-a-file
+        return this.axios.post(`/projects/${this.id}/uploads`, file, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
             }
         });
     }

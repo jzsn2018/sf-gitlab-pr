@@ -1,9 +1,10 @@
 import * as vscode from "vscode";
-import { getNonce, getUri, log, withProgress } from "./utils";
+import { base64toBlob, blobToFile, getNonce, getUri, info, log, validateForm, withProgress } from "./utils";
 import { getMergeRequestTemplates } from "./utils/pr_template";
-import GitExtensionWrap from "./utils/git";
+import GitExtensionWrap from "./utils/git_helper";
 import Api from "./api/gitlab";
-import { ExtensionConfig } from "./type";
+import { ExtensionConfig, GitlabBranch } from "./type";
+import axios from "axios";
 
 let n = 0;
 export class PrConfigWebViewProvider implements vscode.WebviewViewProvider {
@@ -16,9 +17,7 @@ export class PrConfigWebViewProvider implements vscode.WebviewViewProvider {
 
     config: ExtensionConfig = {};
 
-    constructor(private readonly _extensionUri: vscode.Uri,) {
-        this.git = new GitExtensionWrap();
-    }
+    constructor(private readonly _extensionUri: vscode.Uri,) { }
 
     resolveWebviewView(
         webviewView: vscode.WebviewView,
@@ -36,6 +35,15 @@ export class PrConfigWebViewProvider implements vscode.WebviewViewProvider {
             switch (msg.type) {
                 case "init":
                     this.init(msg.data);
+                    break;
+                case "searchUsers":
+                    this.getUsers(msg.data);
+                    break;
+                case "uploadImage":
+                    this.uploadImage(msg.data);
+                    break;
+                case "submitMr":
+                    this.submitMR(msg.data);
                     break;
                 default:
                     break;
@@ -57,6 +65,7 @@ export class PrConfigWebViewProvider implements vscode.WebviewViewProvider {
         const { res: promiseRes } = await withProgress('正在初始化内网提交PR插件...');
 
         const mergeRequestTemplates = getMergeRequestTemplates();
+        this.postMsg("mergeRequestTemplates", mergeRequestTemplates);
 
         const fn = async () => {
             try {
@@ -76,21 +85,6 @@ export class PrConfigWebViewProvider implements vscode.WebviewViewProvider {
         await fn();
 
         promiseRes();
-
-        let sourceBranchOptions;
-        let targetBranchOptions;
-        let assigneeOptions;
-
-        this._view?.webview.postMessage({
-            type: "initOptions",
-            payload: {
-                mergeRequestTemplates,
-                sourceBranchOptions,
-                targetBranchOptions,
-                assigneeOptions,
-            }
-        });
-
     }
 
     async setupRepo(path?: string) {
@@ -102,41 +96,91 @@ export class PrConfigWebViewProvider implements vscode.WebviewViewProvider {
             this.git.repoPath = path;
         }
 
-        const { branches, currentBranchName, projectName, url } = await this.git.getInfo();
+        const { branches: localRepoBranches, currentBranchName, projectName, url } = await this.git.getInfo();
         this.gitUrl = url;
         this.postMsg('currentBranch', currentBranchName);
         this.api = new Api(this.config);
         await this.api.getProject(projectName, url);
 
+        if (this.api?.project) {
+            this.postMsg('web_url', this.api.project.web_url);
+        }
+
         if (this.api.id) {
-            // this.postMsg('branches', branches.map(v => v.type === 1) || []);
-            this.getBranches(branches);
+            const repositoryBranchesRes = await this.api.getBranches();
+            this.getBranches(localRepoBranches, repositoryBranchesRes);
             await this.getUsers();
         } else {
             log('Failed to fetch repository info!');
         }
     }
 
+    async uploadImage(file: any) {
+        if (!file) {
+            return;
+        }
+
+        const { res: promiseRes } = await withProgress('正在上传图片中...');
+
+        const fileBlob = base64toBlob(file.file, file.type);
+        const fileNew = blobToFile(fileBlob, file.name);
+        const formData = new FormData();
+        formData.append('file', fileNew);
+        this.api?.uploadImage(formData).then(res => {
+            if (this?.api?.project) {
+                this.postMsg('imageUploadedRes', {
+                    ...res.data,
+                });
+
+                promiseRes();
+            }
+        })
+    }
     getUsers(name?: string) {
         this.api?.getUsers(name).then(res => {
             this.postMsg('users', res.data);
         });
     }
-    getBranches(branches: any[]) {
-        const data = branches.filter(v => v.type === 1 && !v.name.includes('HEAD')).map(v => {
+    getBranches(branches: any[], repositoryBranchesRes: axios.AxiosResponse<GitlabBranch[], any>) {
+        const data = branches.filter(v => v.type === 0 && !v.name.includes('HEAD')).map(v => {
             v.name = v.name.replace('origin/', '');
             return v;
         });
-        // this.api?.getBranches().then(res => {
-        this.postMsg('branches', data || []);
-        // });
+
+        this.postMsg('branches', {
+            local: data,
+            remote: repositoryBranchesRes?.data || [],
+        });
     }
 
     getConfig() {
-        const { instanceUrl, token } = vscode.workspace.getConfiguration('gitlabmrt');
+        const { host: instanceUrl, AccessToken: token } = vscode.workspace.getConfiguration('深信服内网PR提交插件');
         this.config = { instanceUrl, token };
     }
 
+    private async submitMR(data: any) {
+        // 表单校验
+        const result = validateForm(data);
+        if (result !== true) {
+            return;
+        };
+
+        const { res: promiseRes } = await withProgress('正在提交PR...');
+        const res = await this.api?.submitMR(data).catch(promiseRes);
+        promiseRes();
+        if (res) {
+            info('PR创建成功', '跳转查看PR', '复制PR链接地址').then((item) => {
+                if (item === '跳转查看PR' && res.data.web_url) {
+                    const url = res.data.web_url.replace(/^http(s)?:\/\/[^\/]+/, this.config.instanceUrl || '');
+                    vscode.env.openExternal(vscode.Uri.parse(url));
+                }
+                if (item === '复制PR链接地址' && res.data.web_url) {
+                    const url = res.data.web_url.replace(/^http(s)?:\/\/[^\/]+/, this.config.instanceUrl || '');
+                    vscode.env.clipboard.writeText(url);
+                }
+            });
+        }
+    }
     private initStatusBar() {
         // TODO 
         // const sfPrBtn = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
