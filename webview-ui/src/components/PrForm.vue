@@ -112,12 +112,12 @@ const form = reactive({
 
 const sourceBranchOptions = ref([]);
 const targetBranchOptions = ref([]);
-const assigneeOptions = ref([]);{
+const assigneeOptions = ref([]);
 const mergeRequestTemplateOptions = ref<{ fileName: string; data: string }[]>([]);
 
 const vscode = window.acquireVsCodeApi?.();
 const postMsg = (type, data) => vscode.postMessage({ type, data });
-const oldState = vscode.getState();
+const oldState = vscode?.getState() ?? {};
 
 watch(
   () => form.descriptionTemplate,
