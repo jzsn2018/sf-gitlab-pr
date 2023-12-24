@@ -3,8 +3,14 @@ import App from './App.vue';
 import DevUI from 'vue-devui';
 import 'vue-devui/style.css';
 import '@devui-design/icons/icomoon/devui-icon.css';
-import { ThemeServiceInit, infinityTheme } from 'devui-theme';
+import { ThemeServiceInit, galaxyTheme } from 'devui-theme';
+import '@arco-design/web-vue/dist/arco.css';
+import ArcoVue from '@arco-design/web-vue';
 
-ThemeServiceInit({ infinityTheme }, 'infinityTheme');
+const themeService = ThemeServiceInit({ galaxyTheme }, 'galaxyTheme');
+themeService.applyTheme(galaxyTheme);
 
-createApp(App).use(DevUI).mount('#app');
+const app = createApp(App);
+app.use(ArcoVue);
+app.use(DevUI);
+app.mount('#app');

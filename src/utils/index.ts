@@ -1,4 +1,6 @@
 import { Uri, Webview } from "vscode";
+import * as vscode from "vscode";
+import { ProgressPromise } from "../type";
 
 //  生成特定随机数
 export function getNonce() {
@@ -25,4 +27,48 @@ export function getNonce() {
  */
 export function getUri(webview: Webview, extensionUri: Uri, pathList: string[]) {
     return webview.asWebviewUri(Uri.joinPath(extensionUri, ...pathList));
+}
+
+export const log = (msg: string, ...items: string[]) => {
+    return vscode.window.showErrorMessage(msg, ...items);
+};
+
+export function withProgress(title: string) {
+    return new Promise<ProgressPromise>(res => {
+        vscode.window.withProgress({
+            location: vscode.ProgressLocation.Notification,
+            cancellable: false,
+            title
+        }, progress => {
+            return new Promise<void>(r => {
+                res({
+                    progress,
+                    res: r
+                });
+            });
+        });
+    });
+}
+
+export function handleResError(data: any) {
+    if (!data) {
+        return log('Failed to create MR!');
+    }
+    if (data.error) {
+        return log(Array.isArray(data.error) ? data.error.join(', ') : data.error);
+    }
+    if (Array.isArray(data.message)) {
+        return log(data.message.join('\n'));
+    }
+    if (Object.prototype.toString.call(data.message) === '[object Object]') {
+        let str = '';
+        for (let k in data.message) {
+            const v = data.message[k];
+            if (v.length) {
+                str += `${k} ${v.join(', ')}`;
+            }
+        }
+        return log(str);
+    }
+    return log(JSON.stringify(data));
 }

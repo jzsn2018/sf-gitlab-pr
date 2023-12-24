@@ -1,7 +1,8 @@
 import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
+import AutoImport from 'unplugin-auto-import/vite'
 import Components from "unplugin-vue-components/vite";
-import { DevUiResolver } from "unplugin-vue-components/resolvers";
+import { DevUiResolver, ArcoResolver } from "unplugin-vue-components/resolvers";
 import { fileURLToPath, URL } from 'url'
 
 
@@ -9,8 +10,15 @@ import { fileURLToPath, URL } from 'url'
 export default defineConfig({
   plugins: [
     vue(),
+    AutoImport({
+      resolvers: [ArcoResolver()],
+    }),
     Components({
-      resolvers: [DevUiResolver()],
+      resolvers: [
+        DevUiResolver(),  
+        ArcoResolver({
+        sideEffect: true
+      })],
     }),
   ],
   resolve: {

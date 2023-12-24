@@ -1,0 +1,62 @@
+.squash-item .arco-form-item-label-col {
+  margin: 0;
+}
+
+.pr-form {
+  width: calc(100% - 32px);
+  padding: 8px;
+  padding-right: 16px;
+}
+
+.pr-item .arco-space-vertical {
+  min-width: 100% !important;
+}
+
+.dp-md-container .dp-md-toolbar-container {
+  min-height: unset !important;
+  height: fit-content;
+  box-sizing: border-box;
+  padding: 0 !important;
+}
+.md-toolbar-item {
+  margin-right: 0 !important;
+  height: 14px !important;
+}
+
+.md-toolbar-item svg {
+  width: 12px;
+  height: 12px;
+}
+
+.dp-md-container .CodeMirror pre.CodeMirror-line {
+  color: #333 !important;
+}
+
+.arco-form-item-label{
+  font-size: 12px !important;
+}
+
+.arco-form-item{
+  margin-bottom: 16px !important;
+}
+.merge-options-item{
+  margin-bottom: 0!important;
+}
+
+.merge-options-item .arco-form-item-content{
+  min-height: fit-content !important;
+}
+.merge-options-item .arco-form-item-wrapper-col{
+  min-height: 24px !important;
+}
+.merge-options-item .arco-form-item-label-col{
+  display: none;
+}
+
+.arco-checkbox-label{
+  font-size: 12px !important;
+}
+
+.md-toolbar-container{
+  margin-left: 0 !important;
+}

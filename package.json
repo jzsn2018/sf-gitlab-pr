@@ -9,7 +9,9 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onView:sf-gitlab-pr"
+  ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
@@ -23,7 +25,10 @@
         {
           "id": "sf-gitlab-pr",
           "title": "内网PR提交",
-          "icon": "src/assets/gitlab.svg"
+          "icon": "src/assets/gitlab.svg",
+          "activationEvents": [
+            "onView:sf-gitlab-pr"
+          ]
         }
       ]
     },
@@ -37,20 +42,20 @@
       ]
     },
     "configuration": {
-			"title": "GitlabMrt",
-			"properties": {
-				"gitlabmrt.instanceUrl": {
-					"type": "string",
-					"default": "https://gitlab.com",
-					"description": "Your GitLab instance URL"
-				},
-				"gitlabmrt.token": {
-					"type": "string",
-					"default": "",
-					"description": "Access token to use to connect to the Gitlab API"
-				}
-			}
-		}
+      "title": "GitlabMrt",
+      "properties": {
+        "gitlabmrt.instanceUrl": {
+          "type": "string",
+          "default": "https://gitlab.com",
+          "description": "Your GitLab instance URL"
+        },
+        "gitlabmrt.token": {
+          "type": "string",
+          "default": "",
+          "description": "Access token to use to connect to the Gitlab API"
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "pnpm run compile",
@@ -61,15 +66,18 @@
     "test": "node ./out/test/runTest.js"
   },
   "devDependencies": {
-    "@types/vscode": "^1.84.0",
     "@types/mocha": "^10.0.3",
     "@types/node": "18.x",
+    "@types/vscode": "^1.84.0",
     "@typescript-eslint/eslint-plugin": "^6.9.0",
     "@typescript-eslint/parser": "^6.9.0",
+    "@vscode/test-electron": "^2.3.6",
     "eslint": "^8.52.0",
     "glob": "^10.3.10",
     "mocha": "^10.2.0",
-    "typescript": "^5.2.2",
-    "@vscode/test-electron": "^2.3.6"
+    "typescript": "^5.2.2"
+  },
+  "dependencies": {
+    "axios": "^1.6.2"
   }
 }
